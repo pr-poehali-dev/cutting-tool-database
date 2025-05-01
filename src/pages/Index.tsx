@@ -1,43 +1,84 @@
 
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import Icon from "@/components/ui/icon";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { getAllTools, deleteTool, Tool } from "@/lib/data";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
+import { getAllTools, deleteTool, Tool, getAllCategories, Category, getToolsByCategory } from "@/lib/data";
 
 const Index = () => {
   const [tools, setTools] = useState<Tool[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [filteredTools, setFilteredTools] = useState<Tool[]>([]);
+  const location = useLocation();
 
   useEffect(() => {
-    // Загрузка инструментов при монтировании
-    const loadTools = () => {
-      const allTools = getAllTools();
-      setTools(allTools);
-      setFilteredTools(allTools);
+    // Загрузка категорий и инструментов при монтировании
+    const loadCategoriesAndTools = () => {
+      const allCategories = getAllCategories();
+      setCategories(allCategories);
+      
+      // Проверяем параметры URL для выбора категории
+      const params = new URLSearchParams(location.search);
+      const categoryParam = params.get('category');
+      
+      if (categoryParam) {
+        setSelectedCategory(categoryParam);
+        const toolsInCategory = getToolsByCategory(categoryParam);
+        setTools(toolsInCategory);
+        setFilteredTools(toolsInCategory);
+      } else {
+        const allTools = getAllTools();
+        setTools(allTools);
+        setFilteredTools(allTools);
+      }
     };
     
-    loadTools();
-  }, []);
+    loadCategoriesAndTools();
+  }, [location.search]);
 
   useEffect(() => {
     // Фильтрация инструментов при изменении поискового запроса
-    if (searchQuery.trim() === "") {
-      setFilteredTools(tools);
-    } else {
+    applyFilters();
+  }, [searchQuery, selectedCategory, tools]);
+
+  const applyFilters = () => {
+    let filtered = tools;
+    
+    // Применяем поисковый запрос
+    if (searchQuery.trim() !== "") {
       const query = searchQuery.toLowerCase();
-      const filtered = tools.filter(tool => 
+      filtered = filtered.filter(tool => 
         tool.name.toLowerCase().includes(query) ||
         tool.type.toLowerCase().includes(query) ||
         tool.material.toLowerCase().includes(query) ||
         tool.description.toLowerCase().includes(query)
       );
-      setFilteredTools(filtered);
     }
-  }, [searchQuery, tools]);
+    
+    setFilteredTools(filtered);
+  };
+
+  const handleCategoryChange = (categoryId: string) => {
+    setSelectedCategory(categoryId);
+    if (categoryId === "all") {
+      const allTools = getAllTools();
+      setTools(allTools);
+    } else {
+      const toolsInCategory = getToolsByCategory(categoryId);
+      setTools(toolsInCategory);
+    }
+  };
 
   const handleDelete = (id: string) => {
     if (window.confirm("Вы уверены, что хотите удалить этот инструмент?")) {
@@ -48,56 +89,91 @@ const Index = () => {
     }
   };
 
+  const getCategoryName = (categoryId?: string) => {
+    if (!categoryId) return "Без категории";
+    const category = categories.find(c => c.id === categoryId);
+    return category ? category.name : "Неизвестная категория";
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex items-center justify-between">
           <h1 className="text-2xl font-bold text-gray-900">База режущего инструмента</h1>
-          <Link to="/add-tool">
-            <Button className="bg-blue-600 hover:bg-blue-700">
-              <Icon name="Plus" className="mr-2" size={16} />
-              Добавить инструмент
-            </Button>
-          </Link>
+          <div className="flex space-x-4">
+            <Link to="/categories">
+              <Button variant="outline">
+                <Icon name="FolderOpen" className="mr-2" size={16} />
+                Категории
+              </Button>
+            </Link>
+            <Link to="/add-tool">
+              <Button className="bg-blue-600 hover:bg-blue-700">
+                <Icon name="Plus" className="mr-2" size={16} />
+                Добавить инструмент
+              </Button>
+            </Link>
+          </div>
         </div>
       </header>
       
       <main className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mb-6">
-          <div className="flex items-center max-w-md">
-            <div className="relative w-full">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Icon name="Search" className="text-gray-400" size={18} />
+        <div className="mb-6 flex flex-col md:flex-row md:items-center gap-4">
+          <div className="w-full md:w-1/2">
+            <div className="flex items-center max-w-md">
+              <div className="relative w-full">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Icon name="Search" className="text-gray-400" size={18} />
+                </div>
+                <Input
+                  type="text"
+                  placeholder="Поиск инструмента..."
+                  className="pl-10"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
               </div>
-              <Input
-                type="text"
-                placeholder="Поиск инструмента..."
-                className="pl-10"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
+              {searchQuery && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="ml-2" 
+                  onClick={() => setSearchQuery("")}
+                >
+                  <Icon name="X" size={16} />
+                </Button>
+              )}
             </div>
             {searchQuery && (
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="ml-2" 
-                onClick={() => setSearchQuery("")}
-              >
-                <Icon name="X" size={16} />
-              </Button>
+              <p className="mt-2 text-sm text-gray-500">
+                {filteredTools.length === 0 
+                  ? "Инструменты не найдены" 
+                  : `Найдено: ${filteredTools.length}`}
+              </p>
             )}
           </div>
-          {searchQuery && (
-            <p className="mt-2 text-sm text-gray-500">
-              {filteredTools.length === 0 
-                ? "Инструменты не найдены" 
-                : `Найдено: ${filteredTools.length}`}
-            </p>
-          )}
+          
+          <div className="w-full md:w-1/2 md:ml-4">
+            <Select 
+              value={selectedCategory || "all"} 
+              onValueChange={handleCategoryChange}
+            >
+              <SelectTrigger className="max-w-md">
+                <SelectValue placeholder="Выберите категорию" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Все категории</SelectItem>
+                {categories.map((category) => (
+                  <SelectItem key={category.id} value={category.id}>
+                    {category.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
-        {filteredTools.length === 0 && searchQuery ? (
+        {filteredTools.length === 0 ? (
           <div className="text-center py-12">
             <Icon name="Search" className="mx-auto text-gray-400" size={48} />
             <h3 className="mt-2 text-lg font-medium text-gray-900">Инструменты не найдены</h3>
@@ -116,7 +192,12 @@ const Index = () => {
                     className="w-full h-48 object-cover rounded-t-lg"
                   />
                   <div className="p-4">
-                    <h3 className="text-lg font-medium">{tool.name}</h3>
+                    <div className="flex justify-between items-start">
+                      <h3 className="text-lg font-medium">{tool.name}</h3>
+                      <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                        {getCategoryName(tool.categoryId)}
+                      </span>
+                    </div>
                     <p className="text-sm text-gray-600 mt-1">
                       Диаметр: {tool.diameter} мм, Длина: {tool.length} мм
                     </p>

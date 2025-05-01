@@ -1,16 +1,40 @@
 
-import * as React from "react";
-import { LucideProps, icons } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { FC } from "react";
+import * as LucideIcons from "lucide-react";
 
-interface IconProps extends Omit<LucideProps, "ref"> {
-  name: keyof typeof icons;
-  fallback?: keyof typeof icons;
+// Определение типа свойств компонента Icon
+interface IconProps {
+  name: keyof typeof LucideIcons;
+  fallback?: keyof typeof LucideIcons;
+  size?: number;
+  className?: string;
+  color?: string;
+  strokeWidth?: number;
+  onClick?: () => void;
 }
 
-const Icon = ({ name, fallback = "CircleAlert", className, ...props }: IconProps) => {
-  const IconComponent = icons[name] || icons[fallback];
-  return <IconComponent className={cn("", className)} {...props} />;
+// Компонент-обертка для иконок Lucide
+const Icon: FC<IconProps> = ({
+  name,
+  fallback = "CircleAlert",
+  size = 24,
+  className = "",
+  color,
+  strokeWidth = 2,
+  onClick,
+}) => {
+  // Проверяем, существует ли иконка с указанным именем
+  const IconComponent = LucideIcons[name] || LucideIcons[fallback];
+
+  return (
+    <IconComponent
+      size={size}
+      className={className}
+      color={color}
+      strokeWidth={strokeWidth}
+      onClick={onClick}
+    />
+  );
 };
 
 export default Icon;
