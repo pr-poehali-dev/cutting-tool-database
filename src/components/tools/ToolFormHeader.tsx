@@ -5,12 +5,13 @@ import Icon from "@/components/ui/icon";
 
 interface ToolFormHeaderProps {
   title: string;
+  description?: string;
 }
 
-export const ToolFormHeader = ({ title }: ToolFormHeaderProps) => {
+const ToolFormHeader = ({ title, description }: ToolFormHeaderProps) => {
   return (
-    <header className="bg-white shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex items-center">
+    <div className="mb-6">
+      <div className="flex items-center">
         <Link to="/" className="mr-4">
           <Button variant="ghost" size="sm">
             <Icon name="ArrowLeft" className="mr-2" size={16} />
@@ -19,6 +20,11 @@ export const ToolFormHeader = ({ title }: ToolFormHeaderProps) => {
         </Link>
         <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
       </div>
-    </header>
+      {description && (
+        <p className="mt-2 text-sm text-gray-500">{description}</p>
+      )}
+    </div>
   );
 };
+
+export default ToolFormHeader;

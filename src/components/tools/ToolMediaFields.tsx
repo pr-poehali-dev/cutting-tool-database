@@ -2,21 +2,26 @@
 import { useState } from "react";
 import { FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Control } from "react-hook-form";
+import { UseFormReturn } from "react-hook-form";
 import { ToolFormValues } from "@/lib/schemas/tool-schema";
 
 interface ToolMediaFieldsProps {
-  control: Control<ToolFormValues>;
-  imagePreview: string;
-  onImageChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  form: UseFormReturn<ToolFormValues>;
 }
 
-export const ToolMediaFields = ({ control, imagePreview, onImageChange }: ToolMediaFieldsProps) => {
+const ToolMediaFields = ({ form }: ToolMediaFieldsProps) => {
+  const [imagePreview, setImagePreview] = useState<string>("");
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setImagePreview(value);
+    form.setValue("imageUrl", value);
+  };
+
   return (
-    <>
+    <div className="space-y-4">
       <FormField
-        control={control}
+        control={form.control}
         name="imageUrl"
         render={({ field }) => (
           <FormItem>
@@ -24,12 +29,12 @@ export const ToolMediaFields = ({ control, imagePreview, onImageChange }: ToolMe
             <FormControl>
               <Input 
                 placeholder="https://example.com/image.jpg" 
-                onChange={onImageChange}
-                value={field.value}
+                onChange={handleImageChange}
+                value={field.value || ""}
               />
             </FormControl>
             <FormDescription>
-              Укажите URL-адрес изображения
+              URL-адрес изображения инструмента
             </FormDescription>
             <FormMessage />
           </FormItem>
@@ -42,28 +47,15 @@ export const ToolMediaFields = ({ control, imagePreview, onImageChange }: ToolMe
             src={imagePreview} 
             alt="Предпросмотр" 
             className="w-full h-40 object-cover"
-            onError={(e) => (e.currentTarget.style.display = 'none')}
+            onError={(e) => {
+              (e.target as HTMLImageElement).style.display = 'none';
+              setImagePreview("");
+            }} 
           />
         </div>
       )}
-      
-      <FormField
-        control={control}
-        name="description"
-        render={({ field }) => (
-          <FormItem className="mt-4">
-            <FormLabel>Описание</FormLabel>
-            <FormControl>
-              <Textarea 
-                placeholder="Детальное описание инструмента..." 
-                className="h-32"
-                {...field} 
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-    </>
+    </div>
   );
 };
+
+export default ToolMediaFields;

@@ -3,8 +3,9 @@ import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import Icon from "@/components/ui/icon";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { 
   Select, 
   SelectContent, 
@@ -182,26 +183,34 @@ const Index = () => {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4">
             {filteredTools.map((tool) => (
               <Card key={tool.id} className="hover:shadow-md transition-shadow">
-                <CardContent className="p-0">
-                  <img 
-                    src={tool.imageUrl} 
-                    alt={tool.name} 
-                    className="w-full h-48 object-cover rounded-t-lg"
-                  />
-                  <div className="p-4">
-                    <div className="flex justify-between items-start">
-                      <h3 className="text-lg font-medium">{tool.name}</h3>
-                      <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
-                        {getCategoryName(tool.categoryId)}
-                      </span>
+                <CardContent className="p-4">
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <div className="flex items-center mb-2">
+                        <Icon 
+                          name={tool.type.toLowerCase().includes('фреза') ? "CircleOff" : 
+                                tool.type.toLowerCase().includes('сверло') ? "BarChartHorizontalBig" : "Tool"} 
+                          className="mr-3 text-blue-600" 
+                          size={24} 
+                        />
+                        <h3 className="text-lg font-medium">{tool.name}</h3>
+                        <Badge className="ml-2" variant="outline">
+                          {getCategoryName(tool.categoryId)}
+                        </Badge>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-2 mb-2 text-sm text-gray-600">
+                        <div><span className="font-semibold">Тип:</span> {tool.type}</div>
+                        <div><span className="font-semibold">Материал:</span> {tool.material}</div>
+                        <div><span className="font-semibold">Диаметр:</span> {tool.diameter} мм</div>
+                        <div><span className="font-semibold">Длина:</span> {tool.length} мм</div>
+                      </div>
                     </div>
-                    <p className="text-sm text-gray-600 mt-1">
-                      Диаметр: {tool.diameter} мм, Длина: {tool.length} мм
-                    </p>
-                    <div className="flex justify-between mt-4">
+                    
+                    <div className="flex space-x-2 ml-4">
                       <Link to={`/tool/${tool.id}`}>
                         <Button variant="outline" size="sm">
                           <Icon name="Eye" className="mr-1" size={14} />
